@@ -1,5 +1,5 @@
 {
-  "name": "aquality-tracking-reporter-jasmine",
+  "name": "@aquality-automation/aquality-tracking-reporter-jasmine",
   "version": "1.0.0",
   "description": "A Plugin to send results to Aquality Tracking",
   "main": "index.js",
