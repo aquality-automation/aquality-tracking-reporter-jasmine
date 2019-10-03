@@ -44,12 +44,10 @@ class AqualityReporter {
   }
 
   /** Finish Test Run */
-  closeTestRun() {
-    if (!this.existingTestRun) {
-      this.test_run.finish_time = new Date();
-      this.testrun = this.aqalityAPI.createOrUpdateTestRun(this.testrun)
-    }
-    return this.testrun;
+  closeTestRun(id) {
+    this.test_run = this.createOrUpdateTestRun({id});
+    this.test_run.finish_time = new Date();
+    return this.aqalityAPI.createOrUpdateTestRun(this.testrun)
   }
 
   specStarted(result) {

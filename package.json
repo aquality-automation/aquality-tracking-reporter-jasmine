@@ -1,6 +1,6 @@
 {
   "name": "@aquality-automation/aquality-tracking-reporter-jasmine",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A Plugin to send results to Aquality Tracking",
   "main": "index.js",
   "scripts": {
@@ -18,6 +18,9 @@
   ],
   "author": "Vladislav Kostyukevich",
   "license": "ISC",
+  "bin": {
+    "aqualityReporter": "./cli.js"
+  },
   "bugs": {
     "url": "https://github.com/aquality-automation/aquality-tracking-reporter-jasmine/issues"
   },

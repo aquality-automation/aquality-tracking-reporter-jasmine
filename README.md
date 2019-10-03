@@ -35,3 +35,15 @@ exports.config = {
   }
 }
 ```
+
+### Using Aquality Tracker Cli to start and finish testruns
+
+To start test run use:
+```
+aqualityReporter start ${your_api_url} ${your_project_id} ${your_api_token} ${suite name} ${environment} ${build_name}
+```
+
+To finish test run use:
+```
+aqualityReporter finish ${your_api_url} ${your_project_id} ${your_api_token} ${testrun id}
+```
