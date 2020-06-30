@@ -13,27 +13,25 @@ const project_id = args[2];
 const token = args[3];
 const api_url = args[1];
 const aqualityReporter = new AqualityReporter({token, project_id, api_url});
-let suite;
 
 
 const createSuite = () => {
-    suite = aqualityReporter.createOrUpdateTestSuite(args[4]);
+    return aqualityReporter.createOrUpdateTestSuite(args[4]);
 }
 
 const closeTestRun = () => {
-    aqualityReporter.closeTestRun(args[4])
+    aqualityReporter.finishTestrun(args[4])
 }
 
-const createTestRun = () => {
-    const testrun = aqualityReporter.createOrUpdateTestRun({execution_environment: args[5], test_suite_id: suite.id, build_name: args[6]})
+const createTestRun = (suite) => {
+    const testrun = aqualityReporter.startTestrun({execution_environment: args[5], test_suite_id: suite.id, build_name: args[6]})
     console.log(testrun.id)
 }
 
 (function main() {
     switch(type){
         case commands.start:
-                createSuite();
-                createTestRun();
+                createTestRun(createSuite());
                 break;
         case commands.finish:
                 closeTestRun();

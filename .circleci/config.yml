@@ -1,0 +1,55 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      image: circleci/node:latest
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            
+      - run:
+          shell: "/bin/bash -eo pipefail"
+          name: Install Dependencies
+          command: npm i --quiet
+          
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+
+      - run:
+          shell: "/bin/bash -eo pipefail"
+          name: Start Aquality Test Run
+          command: |
+            export NVM_DIR="/opt/circleci/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            export TESTRUNID="$(npm run aquality:start -- ${TOKEN} All Docker build_${CIRCLE_BUILD_NUM}_${CIRCLE_BRANCH})"
+            export TESTRUNID=${TESTRUNID##*$'\n'}
+            echo $TESTRUNID
+            echo "export TESTRUNID=$TESTRUNID" >> $BASH_ENV
+
+      - run:
+          shell: "/bin/bash -eo pipefail"
+          name: Run tests
+          command: |
+            export NVM_DIR="/opt/circleci/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            npm run test
+
+      - run:
+          shell: "/bin/bash -eo pipefail"
+          when: always
+          name: Finish Aquality Test Run
+          command: |
+            echo ${TESTRUNID}
+            export NVM_DIR="/opt/circleci/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            npm run aquality:finish -- ${TOKEN} ${TESTRUNID}
+

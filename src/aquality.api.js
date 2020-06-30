@@ -1,4 +1,5 @@
 const request = require('sync-request');
+const FormData = require('sync-request').FormData;
 
 class AqualityAPI {
     constructor(token, projectId, apiURL) {
@@ -55,96 +56,95 @@ class AqualityAPI {
                 })
             return JSON.parse(resp.getBody('utf8'));
         } catch (error) {
+            throw new Error(`Was not able to create ${endpoint}: ${JSON.stringify(error)}\n
+        URL: ${this._getFullURL(endpoint, params)}\n
+        body:${JSON.stringify(body)}`);
+        }
+    };
+
+    _sendPostFile(endpoint, params, file) {
+        try {
+            const formdata = new FormData();
+            formdata.append(file)
+            const resp = request('POST', this._getFullURL(endpoint, params),
+                {
+                    headers: {
+                        'Authorization': this._createAuthHeaderValue(),
+                        'Accept': 'application/json'
+                    },
+                    form: body
+                })
+            return JSON.parse(resp.getBody('utf8'));
+        } catch (error) {
             throw new Error(`Was not able to create ${endpoint}: ${error.headers.errormessage}\n
         URL: ${this._getFullURL(endpoint, params)}\n
         body:${JSON.stringify(body)}`);
         }
     };
 
-    _createTestRun(testRun) {
-        return this._sendPost('/testrun', undefined, testRun);
+    _startTestrun(testRun) {
+        return this._sendPost('/public/testrun/start', undefined, testRun);
     };
 
-    _getTestRuns(testRun) {
-        return this._sendGet('/testrun', testRun);
+    _finishTestrun(id, project_id) {
+        return this._sendGet('/public/testrun/finish', { id, project_id });
     };
 
-    _getSuites(testSuite) {
-        return this._sendGet('/suite', testSuite);
+    _createOrUpdateSuite(testSuite) {
+        return this._sendPost('/public/suite/create-or-update', undefined, testSuite);
     };
 
-    _createSuite(testSuite) {
-        return this._sendPost('/suite', undefined, testSuite);
+    _createOrUpdateTest(test) {
+        return this._sendPost('/public/test/create-or-update', undefined, test);
     };
 
-    _getTests(test) {
-        return this._sendGet('/test', test);
+    _startResults(test_id, test_run_id, project_id) {
+        return this._sendGet('/public/test/result/start', { test_id, test_run_id, project_id });
     };
 
-    _getResults(testResult) {
-        return this._sendGet('/testresult', testResult);
+    _finishResults(result) {
+        return this._sendPost('/public/test/result/finish', undefined, result);
     };
 
-    _postResult(testResult) {
-        return this._sendPost('/testresult', undefined, testResult);
-    };
-
-    _postTest(test) {
-        return this._sendPost('/test', undefined, test);
+    _addAttachment(project_id, test_result_id, file) {
+        return this._sendPostFile('/public/test/result/attachment', { project_id, test_result_id }, file);
     };
 
     createOrUpdateSuite(suite) {
-        const suites = this._getSuites(suite);
-        if (suites.length > 0) {
-            return suites[0]
-        } else {
-            return this._createSuite(suite)
-        }
-    }
-
-    getTestRun(testrun) {
-        const testruns = this._getTestRuns(testrun);
-        if(testruns && testruns.length > 0){
-            return testruns[0]
-        }
-
-        throw new Error(`This test run does not exist!`)
+        return this._createOrUpdateSuite(suite);
     }
 
     createOrUpdateTestRun(testrun) {
-        return this._createTestRun(testrun);
+        return this._startTestrun(testrun);
     }
 
     createOrUpdateTest(test) {
-        const tests = this._getTests({name: test.name, project_id: test.project_id});
-        if (tests.length > 0) {
-            const oldtest = tests[0];
-            if (oldtest.suites && oldtest.suites.length > 0) {
-                const existingSuite = oldtest.suites.find(x => x.id === test.test_suite_id);
-                if (existingSuite) {
-                    return oldtest;
-                }
-                oldtest.suites.push(test.suites[0]);
-                return this._postTest(oldtest);
-            }
-            oldtest.suite = test.suites;
-            return this._postTest(oldtest);
-
-        } else {
-            return this._postTest(test)
-        }
+        return this._createOrUpdateTest(test)
     }
 
-    createOrUpdateResult(result) {
-        const results = this._getResults({ test_id: result.test_id, test_run_id: result.test_run_id, project_id: result.project_id });
-        if (results.length > 0) {
-            const oldresult = results[0];
-            result.id = oldresult.id;
-            return this._postResult(result);
-        } else {
-            return this._postResult(result)
-        }
-    }
+    startResult(test_id, test_run_id, project_id) {
+        return this._startResults(test_id, test_run_id, project_id);
+    };
+
+    finishResult(result) {
+        return this._finishResults(result);
+    };
+
+    addAttachment(project_id, test_result_id) {
+        return this._addAttachment(result);
+    };
+
+    startTestrun(testRun) {
+        return this._startTestrun(testRun);
+    };
+
+    finishTestrun(id, project_id) {
+        return this._finishTestrun(id, project_id);
+    };
+
+    getTestrun(project_id, id) {
+        return this._sendGet('/testrun', { project_id, id });
+    };
 }
 
 module.exports = AqualityAPI;
