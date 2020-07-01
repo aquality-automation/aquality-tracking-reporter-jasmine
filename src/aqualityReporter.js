@@ -11,8 +11,19 @@ class AqualityReporter {
     this.config = config;
     if (this.config.testrun_id) {
       console.log(`Getting ${this.config.testrun_id} testrun for ${this.config.project_id} project.`);
-      this.testrun = this.aqalityAPI.getTestrun(config.project_id, this.config.testrun_id);
+      const testruns = this.aqalityAPI.getTestrun(config.project_id, this.config.testrun_id);
+      if (testruns.length > 0) {
+        this.testrun = [0];
+      }
     }
+
+    if (!this.testrun) {
+      this.suite = this.createOrUpdateTestSuite(this.config.suite);
+      this.config.testrun.test_suite_id = this.suite.id
+      this.testrun = this.startTestrun(this.config.testrun)
+    }
+
+    console.log(`Test Run is ${JSON.stringify(this.testrun)}`);
   }
 
   /** Prepare Test Suite
@@ -35,7 +46,7 @@ class AqualityReporter {
   }
 
   startTestrun(testrun) {
-    console.log(`Finishing ${id ? id : this.testrun.id} testrun for ${this.config.project_id} project.`);
+    console.log(`Starting testrun for ${this.config.project_id} project.`);
     testrun.project_id = this.config.project_id;
     return this.aqalityAPI.startTestrun(testrun);
   }
@@ -70,6 +81,7 @@ class AqualityReporter {
       }
       console.log(`Finishing result for ${this.currentResult.id} result for ${this.config.project_id} project and ${this.testrun.id} testrun.`);
       this.currentResult = this.aqalityAPI.finishResult(this.currentResult)
+      this.finishTestrun(this.testrun.id);
     } catch (err) {
       console.log(err)
     }
